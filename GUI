@@ -1,1 +1,902 @@
+__author__ = 'Mayunk'
+
+import wx
+import random
+import time
+v =0.000
+i=0.000
+i1=0.000
+i2=0.000
+
+
+class My_App(wx.App):
+
+    def OnInit(self):
+        self.frame = MyFrame(None)
+        self.frame.Show()
+        self.SetTopWindow(self.frame)
+        return True
+
+    def OnExit(self):
+        print ('Dying ...')
+
+
+class MyFrame(wx.Frame):
+    """"""
+
+    def __init__(self, image, parent=None,id=-1, title='Generic Title', pos=wx.DefaultPosition, ):
+
+        size = (420, 350)
+        wx.Frame.__init__(self, parent, id, 'GUI', pos, size)
+
+        sizer_h = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.panel0 = MyPanel(self)
+        sizer_h.Add(self.panel0, 1, wx.EXPAND)
+
+        self.panel1 = MyPanel1(self)
+        sizer_h.Add(self.panel1, 1, wx.EXPAND)
+
+        self.panel2 = MyPanel2(self)
+        sizer_h.Add(self.panel2, 1, wx.EXPAND)
+
+        self.panel3 = MyPanel3(self)
+        sizer_h.Add(self.panel3, 1, wx.EXPAND)
+
+        self.SetSizer(sizer_h)
+
+        self.panel0.ShowYourself()
+
+
+    def ShutDown(self):
+        self.Destroy()
+
+        # Add a panel so it looks correct on all platforms
+
+class MyPanel(wx.Panel):
+    """"""
+    #----------------------------------------------------------------------
+    def __init__(self, parent, id=-1):
+        """Constructor"""
+        wx.Panel.__init__(self, parent, id)
+
+        title = wx.StaticText(self,-1, 'Battery ka MAAL')
+
+        self.labelOne = wx.StaticText(self,-1, 'Battery Voltage  : ')
+        self.Refresh()
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateV, self.timer)
+
+        self.timer.Start(1000)
+
+        self.timer1 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateC, self.timer1)
+
+        self.timer1.Start(1000)
+
+        #timers for empty buttons
+        self.timerx= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.BatteryWarn, self.timerx)
+        self.timerx.Start(1000)
+
+        self.timery= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MPPTWarn, self.timery)
+        self.timery.Start(1000)
+
+        self.timerz= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MotorWarn, self.timerz)
+        self.timerz.Start(1000)
+
+
+        self.labelTwo = wx.StaticText(self,-1, 'Battery Current')
+
+
+        self.wbutton0 = wx.Button(self, -1, '    ')
+        self.wbutton1 = wx.Button(self, -1, '    ')
+        self.wbutton2 = wx.Button(self, -1, '    ')
+        self.wbutton3 = wx.Button(self, -1, '    ')
+        okBtn = wx.Button(self, -1, 'OK')
+        cancelBtn = wx.Button(self, -1, 'Cancel')
+
+        imageFile = "mppt.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MPPTBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON,self.OnMPPT, MPPTBtn)
+
+        imageFile = "battery.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        BatteryBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, None, BatteryBtn)
+
+        imageFile = "motor.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MotorBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnMotor, MotorBtn)
+
+        imageFile = "general.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        GenBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnGeneral, GenBtn)
+
+        self.Bind(wx.EVT_IDLE, self.MPPTWarn, self.wbutton0)
+        self.Bind(wx.EVT_IDLE, self.BatteryWarn, self.wbutton1)
+        self.Bind(wx.EVT_IDLE, self.MotorWarn, self.wbutton2)
+        self.Bind(wx.EVT_IDLE, self.onOK, okBtn)
+        self.Bind(wx.EVT_IDLE, self.onCancel, cancelBtn)
+
+        topSizer        = wx.BoxSizer(wx.VERTICAL)
+        toolBtn         = wx.BoxSizer(wx.HORIZONTAL)
+        warnSizer       = wx.BoxSizer(wx.HORIZONTAL)
+        titleSizer      = wx.BoxSizer(wx.HORIZONTAL)
+        inputOneSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        inputTwoSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer        = wx.BoxSizer(wx.HORIZONTAL)
+
+
+        toolBtn.Add(MPPTBtn, 0, wx.ALL, 5)
+        toolBtn.Add(BatteryBtn, 0, wx.ALL, 5)
+        toolBtn.Add(MotorBtn, 0, wx.ALL, 5)
+        toolBtn.Add(GenBtn, 0, wx.ALL, 5)
+
+        warnSizer.Add(self.wbutton0, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton1, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton2, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton3, 0, wx.ALL, 5)
+
+
+        titleSizer.Add(title, 0, wx.ALL, 5)
+
+        inputOneSizer.Add(self.labelOne, 0, wx.ALL, 5)
+
+        inputTwoSizer.Add(self.labelTwo, 0, wx.ALL, 5)
+
+        btnSizer.Add(okBtn, 0, wx.ALL, 5)
+        btnSizer.Add(cancelBtn, 0, wx.ALL, 5)
+
+        topSizer.Add(toolBtn, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(warnSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(titleSizer, 0, wx.CENTER)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(inputOneSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(inputTwoSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(btnSizer, 0, wx.ALL|wx.CENTER, 5)
+
+        self.SetSizer(topSizer)
+        topSizer.Fit(self)
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Hide()
+
+
+
+    def MPPTWarn(self, event):
+        if i1>7 or i2>5.5:
+            self.wbutton0.SetBackgroundColour('red')
+        else:
+            self.wbutton0.SetBackgroundColour('white')
+
+    def BatteryWarn(self, event):
+        if v>3 or i>5:
+            self.wbutton1.SetBackgroundColour('red')
+        else:
+            self.wbutton1.SetBackgroundColour('white')
+
+    def MotorWarn(self, event):
+        if Mv>5 or Im>3:
+            self.wbutton2.SetBackgroundColour('red')
+        else:
+            self.wbutton2.SetBackgroundColour('white')
+
+    def onOK(self, event):
+        # Do something
+        print ('onOK handler')
+
+    def onCancel(self, event):
+        self.closeProgram()
+
+    def closeProgram(self):
+        self.Destroy()
+
+    def updateV(self, event):
+        """"""
+        global v
+        v=random.uniform(1,10)
+        print('battery voltage =')
+        print(v)
+        if v>3:
+            self.labelOne.SetBackgroundColour('red')
+            self.labelOne.SetLabel('Battery Voltage : ' + str(v))
+
+
+        else:
+            self.labelOne.SetBackgroundColour('white')
+            self.labelOne.SetLabel('Battery Voltage : ' + str(v))
+
+
+        self.Refresh()
+
+    def updateC(self, event):
+        """"""
+        global i
+        i=random.uniform(1,10)
+        print('battery current =')
+        print(i)
+        if i>5:
+           self.labelTwo.SetBackgroundColour('red')
+           self.labelTwo.SetLabel('Battery Current : ' + str(i))
+
+
+        else:
+            self.labelTwo.SetBackgroundColour('white')
+            self.labelTwo.SetLabel('Battery Current : ' + str(i))
+
+        self.Refresh()
+
+
+    def ShowYourself(self):
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Show()
+
+
+    def OnMPPT(self, event):
+        self.Hide()
+        self.GetParent().panel1.ShowYourself()
+
+    def OnMotor(self, event):
+        self.Hide()
+        self.GetParent().panel2.ShowYourself()
+
+    def OnGeneral(self, event):
+        self.Hide()
+        self.GetParent().panel3.ShowYourself()
+
+class MyPanel1(wx.Panel):
+    """"""
+    #----------------------------------------------------------------------
+    def __init__(self, parent, id=-1):
+        """Constructor"""
+        wx.Panel.__init__(self, parent, id)
+
+
+        title = wx.StaticText(self, -1, 'MPPT')
+
+        self.labelOne = wx.StaticText(self,-1, 'MPPT current 1')
+
+
+        self.timerx= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.BatteryWarn, self.timerx)
+        self.timerx.Start(1000)
+
+        self.timery= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MPPTWarn, self.timery)
+        self.timery.Start(1000)
+
+        self.timerz= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MotorWarn, self.timerz)
+        self.timerz.Start(1000)
+        self.timer = wx.Timer(self)
+
+        self.Bind(wx.EVT_TIMER, self.updateV, self.timer)
+
+        self.timer.Start(1000)
+
+        self.labelTwo = wx.StaticText(self,-1, 'MPPT current 2')
+
+
+
+        self.timer1 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateC, self.timer1)
+
+        self.timer1.Start(1000)
+
+        self.wbutton0 = wx.Button(self, -1, '    ')
+        self.wbutton1 = wx.Button(self, -1, '    ')
+        self.wbutton2 = wx.Button(self, -1, '    ')
+        self.wbutton3 = wx.Button(self, -1, '    ')
+        okBtn = wx.Button(self, -1, 'OK')
+        cancelBtn = wx.Button(self, -1, 'Cancel')
+
+        imageFile = "battery.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        BatteryBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON,self.OnBattery, BatteryBtn)
+
+        imageFile = "mppt.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MPPTBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        imageFile = "motor.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MotorBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnMotor, MotorBtn)
+
+        self.Bind(wx.EVT_BUTTON, None, MPPTBtn)
+
+        imageFile = "general.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        GenBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnGeneral, GenBtn)
+
+
+        self.Bind(wx.EVT_IDLE, self.MPPTWarn, self.wbutton0)
+        self.Bind(wx.EVT_IDLE, self.BatteryWarn, self.wbutton1)
+        self.Bind(wx.EVT_IDLE, self.MotorWarn, self.wbutton2)
+        self.Bind(wx.EVT_IDLE, self.onOK, okBtn)
+        self.Bind(wx.EVT_IDLE, self.onCancel, cancelBtn)
+
+        topSizer        = wx.BoxSizer(wx.VERTICAL)
+        toolBtn         = wx.BoxSizer(wx.HORIZONTAL)
+        warnSizer       = wx.BoxSizer(wx.HORIZONTAL)
+        titleSizer      = wx.BoxSizer(wx.HORIZONTAL)
+        inputOneSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        inputTwoSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer        = wx.BoxSizer(wx.HORIZONTAL)
+
+        toolBtn.Add(MPPTBtn, 0, wx.ALL, 5)
+        toolBtn.Add(BatteryBtn, 0, wx.ALL, 5)
+        toolBtn.Add(MotorBtn, 0, wx.ALL, 5)
+        toolBtn.Add(GenBtn, 0, wx.ALL, 5)
+
+        warnSizer.Add(self.wbutton0, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton1, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton2, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton3, 0, wx.ALL, 5)
+
+
+        titleSizer.Add(title, 0, wx.ALL, 5)
+
+        inputOneSizer.Add(self.labelOne, 0, wx.ALL, 5)
+
+        inputTwoSizer.Add(self.labelTwo, 0, wx.ALL, 5)
+
+        btnSizer.Add(okBtn, 0, wx.ALL, 5)
+        btnSizer.Add(cancelBtn, 0, wx.ALL, 5)
+
+        topSizer.Add(toolBtn, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(warnSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(titleSizer, 0, wx.CENTER)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(inputOneSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(inputTwoSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(btnSizer, 0, wx.ALL|wx.CENTER, 5)
+
+        self.SetSizer(topSizer)
+        topSizer.Fit(self)
+
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Hide()
+
+    def MPPTWarn(self, event):
+        if i1>7 or i2>5.5:
+            self.wbutton0.SetBackgroundColour('red')
+        else:
+            self.wbutton0.SetBackgroundColour('white')
+
+    def BatteryWarn(self, event):
+        if v>3 or i>5:
+            self.wbutton1.SetBackgroundColour('red')
+        else:
+            self.wbutton1.SetBackgroundColour('white')
+
+    def MotorWarn(self, event):
+        if Mv>5 or Im>3:
+            self.wbutton2.SetBackgroundColour('red')
+        else:
+            self.wbutton2.SetBackgroundColour('white')
+
+    def onOK(self, event):
+        # Do something
+        print ('onOK handler')
+
+    def onCancel(self, event):
+        self.closeProgram()
+
+    def closeProgram(self):
+        self.Destroy()
+
+    def updateV(self, event):
+        """"""
+        global i1
+        i1=random.uniform(1,10)
+        #print('current1 =')
+        #print(i1)
+        if i1>7:
+           self.labelOne.SetBackgroundColour('red')
+           self.labelOne.SetLabel('Current1 : ' + str(i1))
+
+
+        else:
+            self.labelOne.SetBackgroundColour('white')
+            self.labelOne.SetLabel('Current1 : ' + str(i1))
+
+        self.Refresh()
+
+    def updateC(self, event):
+        """"""
+        global i2
+        i2=random.uniform(1,10)
+        #print('current2 =')
+        #print(i2)
+        if i2>5.5:
+           self.labelTwo.SetBackgroundColour('red')
+           self.labelTwo.SetLabel('Current2 : ' + str(i2))
+
+
+        else:
+            self.labelTwo.SetBackgroundColour('white')
+            self.labelTwo.SetLabel('Current2 : ' + str(i2))
+
+        self.Refresh()
+
+    def ShowYourself(self):
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Show()
+
+    def OnMotor(self, event):
+        self.Hide()
+        self.GetParent().panel2.ShowYourself()
+
+    def OnBattery(self, event):
+        self.Hide()
+        self.GetParent().panel0.ShowYourself()
+
+    def OnGeneral(self, event):
+        self.Hide()
+        self.GetParent().panel3.ShowYourself()
+
+class MyPanel2(wx.Panel):
+    """"""
+    #----------------------------------------------------------------------
+    def __init__(self, parent, id=-1):
+        """Constructor"""
+        wx.Panel.__init__(self, parent, id)
+
+        title = wx.StaticText(self,-1, 'Motor Controller')
+
+        self.labelOne = wx.StaticText(self,-1, 'Motor Controller Current: ')
+        self.Refresh()
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateV, self.timer)
+
+        self.timer.Start(1000)
+
+        self.timerx= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.BatteryWarn, self.timerx)
+        self.timerx.Start(1000)
+
+        self.timery= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MPPTWarn, self.timery)
+        self.timery.Start(1000)
+
+        self.timerz= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MotorWarn, self.timerz)
+        self.timerz.Start(1000)
+
+        self.labelTwo = wx.StaticText(self,-1, 'Motor Voltage')
+
+
+
+        self.timer1 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateC, self.timer1)
+
+        self.timer1.Start(1000)
+
+        self.wbutton0 = wx.Button(self, -1, '    ')
+        self.wbutton1 = wx.Button(self, -1, '    ')
+        self.wbutton2 = wx.Button(self, -1, '    ')
+        self.wbutton3 = wx.Button(self, -1, '    ')
+
+        okBtn = wx.Button(self, -1, 'OK')
+        cancelBtn = wx.Button(self, -1, 'Cancel')
+
+        imageFile = "mppt.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MPPTBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON,self.OnMPPT, MPPTBtn)
+
+        imageFile = "battery.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        BatteryBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnBattery, BatteryBtn)
+
+        imageFile = "motor.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MotorBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, None, MotorBtn)
+
+        imageFile = "general.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        GenBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnGeneral, GenBtn)
+
+
+        self.Bind(wx.EVT_IDLE, self.MPPTWarn, self.wbutton0)
+        self.Bind(wx.EVT_IDLE, self.BatteryWarn, self.wbutton1)
+        self.Bind(wx.EVT_IDLE, self.MotorWarn, self.wbutton2)
+
+        self.Bind(wx.EVT_BUTTON, self.onOK, okBtn)
+        self.Bind(wx.EVT_BUTTON, self.onCancel, cancelBtn)
+
+        topSizer        = wx.BoxSizer(wx.VERTICAL)
+        toolBtn         = wx.BoxSizer(wx.HORIZONTAL)
+        warnSizer       = wx.BoxSizer(wx.HORIZONTAL)
+        titleSizer      = wx.BoxSizer(wx.HORIZONTAL)
+        inputOneSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        inputTwoSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer        = wx.BoxSizer(wx.HORIZONTAL)
+
+
+        toolBtn.Add(MPPTBtn, 0, wx.ALL, 5)
+        toolBtn.Add(BatteryBtn, 0, wx.ALL, 5)
+        toolBtn.Add(MotorBtn, 0, wx.ALL, 5)
+        toolBtn.Add(GenBtn, 0, wx.ALL, 5)
+
+        warnSizer.Add(self.wbutton0, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton1, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton2, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton3, 0, wx.ALL, 5)
+
+        titleSizer.Add(title, 0, wx.ALL, 5)
+
+        inputOneSizer.Add(self.labelOne, 0, wx.ALL, 5)
+
+        inputTwoSizer.Add(self.labelTwo, 0, wx.ALL, 5)
+
+        btnSizer.Add(okBtn, 0, wx.ALL, 5)
+        btnSizer.Add(cancelBtn, 0, wx.ALL, 5)
+
+        topSizer.Add(toolBtn, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(warnSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(titleSizer, 0, wx.CENTER)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(inputOneSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(inputTwoSizer, 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+
+        topSizer.Add(btnSizer, 0, wx.ALL|wx.CENTER, 5)
+
+        self.SetSizer(topSizer)
+        topSizer.Fit(self)
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Hide()
+
+    def MPPTWarn(self, event):
+        if i1>7 or i2>5.5:
+            self.wbutton0.SetBackgroundColour('red')
+        else:
+            self.wbutton0.SetBackgroundColour('white')
+
+    def BatteryWarn(self, event):
+        if v>3 or i>5:
+            self.wbutton1.SetBackgroundColour('red')
+        else:
+            self.wbutton1.SetBackgroundColour('white')
+
+    def MotorWarn(self, event):
+        if Mv>5 or Im>3:
+            self.wbutton2.SetBackgroundColour('red')
+        else:
+            self.wbutton2.SetBackgroundColour('white')
+
+
+    def onOK(self, event):
+        # Do something
+        print ('onOK handler')
+
+    def onCancel(self, event):
+        self.closeProgram()
+
+    def closeProgram(self):
+        self.Destroy()
+
+    def updateV(self, event):
+        """"""
+        global Im
+        Im=random.uniform(1,10)
+        print('Motor Controller Current =')
+        print(Im)
+        if Im>3:
+            self.labelOne.SetBackgroundColour('red')
+            self.labelOne.SetLabel('Motor Controller Current : ' + str(Im))
+
+
+        else:
+            self.labelOne.SetBackgroundColour('white')
+            self.labelOne.SetLabel('Motor Controller Current : ' + str(Im))
+
+
+        self.Refresh()
+
+    def updateC(self, event):
+        """"""
+        global Mv
+        Mv=random.uniform(1,10)
+        print('Motor Voltage =')
+        print(Mv)
+        if Mv>5:
+           self.labelTwo.SetBackgroundColour('red')
+           self.labelTwo.SetLabel('Motor Voltage : ' + str(Mv))
+
+
+        else:
+            self.labelTwo.SetBackgroundColour('white')
+            self.labelTwo.SetLabel('Motor Voltage : ' + str(Mv))
+
+        self.Refresh()
+
+
+    def ShowYourself(self):
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Show()
+
+
+    def OnMPPT(self, event):
+        self.Hide()
+        self.GetParent().panel1.ShowYourself()
+
+    def OnBattery(self, event):
+        self.Hide()
+        self.GetParent().panel0.ShowYourself()
+
+    def OnGeneral(self, event):
+        self.Hide()
+        self.GetParent().panel3.ShowYourself()
+
+class MyPanel3(wx.Panel):
+    """"""
+    #----------------------------------------------------------------------
+    def __init__(self, parent, id=-1):
+        """Constructor"""
+        wx.Panel.__init__(self, parent, id)
+
+
+        title = wx.StaticText(self, -1, 'General')
+
+
+        self.labelOne = wx.StaticText(self,-1)
+        self.labelOne.SetLabel('Car Speed : ')
+        self.timer1 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateS, self.timer1)
+
+        self.timerx= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.BatteryWarn, self.timerx)
+        self.timerx.Start(1000)
+
+        self.timery= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MPPTWarn, self.timery)
+        self.timery.Start(1000)
+
+        self.timerz= wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.MotorWarn, self.timerz)
+        self.timerz.Start(1000)
+
+        self.timer1.Start(1000)
+
+
+        self.labelTwo = wx.StaticText(self,-1)
+        self.labelTwo.SetLabel('Acceleration: ')
+
+        self.timer2 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateA, self.timer2)
+
+        self.timer2.Start(1000)
+
+        self.labelThree = wx.StaticText(self,-1)
+        self.labelThree.SetLabel('Ambient Temperature:')
+
+        self.timer3 = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.updateT, self.timer3)
+
+        self.timer3.Start(1000)
+
+
+        self.wbutton0 = wx.Button(self, -1, '    ')
+        self.wbutton1 = wx.Button(self, -1, '    ')
+        self.wbutton2 = wx.Button(self, -1, '    ')
+        self.wbutton3 = wx.Button(self, -1, '    ')
+        okBtn = wx.Button(self, -1, 'OK')
+        cancelBtn = wx.Button(self, -1, 'Cancel')
+
+        imageFile = "battery.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        BatteryBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON,self.OnBattery, BatteryBtn)
+
+        imageFile = "mppt.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MPPTBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        imageFile = "motor.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        MotorBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, self.OnMotor, MotorBtn)
+
+        imageFile = "general.png"
+        image1 = wx.Image(imageFile, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        GenBtn = wx.BitmapButton(self, id=-1, bitmap=image1,
+        pos=(10, 20), size = (image1.GetWidth()+10, image1.GetHeight()+10))
+
+        self.Bind(wx.EVT_BUTTON, None, GenBtn)
+
+
+        self.Bind(wx.EVT_IDLE, self.MPPTWarn, self.wbutton0)
+        self.Bind(wx.EVT_IDLE, self.BatteryWarn, self.wbutton1)
+        self.Bind(wx.EVT_IDLE, self.MotorWarn, self.wbutton2)
+        self.Bind(wx.EVT_IDLE, self.onOK, okBtn)
+        self.Bind(wx.EVT_IDLE, self.onCancel, cancelBtn)
+
+        topSizer        = wx.BoxSizer(wx.VERTICAL)
+        toolBtn         = wx.BoxSizer(wx.HORIZONTAL)
+        warnSizer       = wx.BoxSizer(wx.HORIZONTAL)
+        titleSizer      = wx.BoxSizer(wx.HORIZONTAL)
+        inputOneSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        inputTwoSizer   = wx.BoxSizer(wx.HORIZONTAL)
+        inputThreeSizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer        = wx.BoxSizer(wx.HORIZONTAL)
+
+        toolBtn.Add(MPPTBtn, 0, wx.ALL, 5)
+        toolBtn.Add(BatteryBtn, 0, wx.ALL, 5)
+        toolBtn.Add(MotorBtn, 0, wx.ALL, 5)
+        toolBtn.Add(GenBtn, 0, wx.ALL, 5)
+
+        warnSizer.Add(self.wbutton0, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton1, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton2, 0, wx.ALL, 5)
+        warnSizer.Add(self.wbutton3, 0, wx.ALL, 5)
+
+
+        titleSizer.Add(title, 0, wx.ALL, 5)
+
+        inputOneSizer.Add(self.labelOne, 0, wx.ALL, 5)
+
+        inputTwoSizer.Add(self.labelTwo, 0, wx.ALL, 5)
+
+        inputThreeSizer.Add(self.labelThree, 0, wx.ALL, 5)
+
+        btnSizer.Add(okBtn, 0, wx.ALL, 5)
+        btnSizer.Add(cancelBtn, 0, wx.ALL, 5)
+
+        topSizer.Add(toolBtn, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(warnSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(titleSizer, 0, wx.CENTER)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(inputOneSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(inputTwoSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(inputThreeSizer, 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(wx.StaticLine(self), 0, wx.ALL|wx.EXPAND, 5)
+        topSizer.Add(btnSizer, 0, wx.ALL|wx.CENTER, 5)
+
+        self.SetSizer(topSizer)
+        topSizer.Fit(self)
+
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Hide()
+
+
+    def MPPTWarn(self, event):
+        if i1>7 or i2>5.5:
+            self.wbutton0.SetBackgroundColour('red')
+        else:
+            self.wbutton0.SetBackgroundColour('white')
+
+    def BatteryWarn(self, event):
+        if v>3 or i>5:
+            self.wbutton1.SetBackgroundColour('red')
+        else:
+            self.wbutton1.SetBackgroundColour('white')
+
+    def MotorWarn(self, event):
+        if Mv>5 or Im>3:
+            self.wbutton2.SetBackgroundColour('red')
+        else:
+            self.wbutton2.SetBackgroundColour('white')
+
+    def updateS(self, event):
+        v=random.uniform(60,90)
+        self.labelOne.SetLabel('Car Speed : ' + str(v))
+
+    def updateA(self, event):
+        a=random.uniform(1,6)
+        self.labelTwo.SetLabel('Acceleration : ' + str(a))
+
+    def updateT(self, event):
+        t=random.uniform(30,50)
+        self.labelThree.SetLabel('Ambient Temperature : ' + str(t))
+
+    def onOK(self, event):
+        # Do something
+        print ('onOK handler')
+
+    def onCancel(self, event):
+        self.closeProgram()
+
+    def closeProgram(self):
+        self.Destroy()
+
+    def ShowYourself(self):
+        self.Raise()
+        self.SetPosition((0,0))
+        self.Fit()
+        self.Show()
+
+    def OnMotor(self, event):
+        self.Hide()
+        self.GetParent().panel2.ShowYourself()
+
+    def OnMPPT(self, event):
+        self.Hide()
+        self.GetParent().panel1.ShowYourself()
+
+    def OnBattery(self, event):
+        self.Hide()
+        self.GetParent().panel0.ShowYourself()
+
+
+def main():
+    app = My_App(redirect = False)
+    time.sleep(1)
+    app.MainLoop()
+
+if __name__ == '__main__':
+    main()
 
